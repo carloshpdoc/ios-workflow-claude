@@ -16,6 +16,7 @@ REPO_DIR="${IOS_WORKFLOW_CLAUDE_REPO:-${SKILLS_CLAUDE_REPO:-$SCRIPT_DIR}}"
 # ----- defaults --------------------------------------------------------------
 TARGET_DIR=""
 MODE="project"          # project | global
+IDE="${IDE:-claude}"    # claude | cursor | kiro
 SYMLINK=false
 SKIP_SUBSTITUTION=false
 DRY_RUN=false
@@ -65,6 +66,13 @@ INSTALL MODES
   (default)              Install to ./.claude/ — copies files, substitutes placeholders
   --global               Install to ~/.claude/ — symlinks files, skips substitution
   --target <path>        Custom install root (overrides project / global)
+  --ide <claude|cursor|kiro>
+                         Target tool. Defaults to `claude`.
+                         - claude: commands/, skills/, agents/ under .claude/
+                         - cursor: everything rewritten as .mdc rules under .cursor/rules/
+                         - kiro:   everything rewritten as steering .md under .kiro/steering/
+                         Cursor/Kiro modes: symlink disabled, frontmatter is rewritten,
+                         {{PLACEHOLDERS}} still substituted.
 
 PLACEHOLDER VALUES (required for project install; ignored for --global)
   --app <name>           App / scheme name                 → {{APP}}
@@ -114,6 +122,12 @@ EXAMPLES
   # Global install but include bin/ scripts too (for ollama-backed skills)
   ./bootstrap.sh --global --bin
 
+  # Install as Cursor rules (project)
+  ./bootstrap.sh --ide cursor --app MyApp --ticket PROJ
+
+  # Install as Kiro steering files (project)
+  ./bootstrap.sh --ide kiro --app MyApp --ticket PROJ
+
   # Interactive mode — asks for any missing field
   ./bootstrap.sh --interactive
 EOF
@@ -137,6 +151,7 @@ while [[ $# -gt 0 ]]; do
     --git-user)         GIT_USER="$2"; GIT_NAME="$2"; shift 2 ;;
     --git-email)        GIT_EMAIL="$2"; shift 2 ;;
     --target)           TARGET_DIR="$2"; shift 2 ;;
+    --ide)              IDE="$2"; shift 2 ;;
     --global)           MODE="global"; shift ;;
     --commands)         COMMANDS_FILTER="$2"; shift 2 ;;
     --skills)           SKILLS_FILTER="$2"; shift 2 ;;
@@ -154,15 +169,28 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ----- validate IDE ----------------------------------------------------------
+case "$IDE" in
+  claude|cursor|kiro) ;;
+  *) die "Unknown --ide: $IDE (must be claude|cursor|kiro)" ;;
+esac
+
+# Cursor / Kiro do not support symlink installs (the frontmatter rewrite needs
+# real files), so silently disable.
+if [[ "$IDE" != "claude" ]]; then
+  SYMLINK=false
+fi
+
 # ----- resolve target --------------------------------------------------------
 if [[ -z "$TARGET_DIR" ]]; then
-  if [[ "$MODE" == "global" ]]; then
-    TARGET_DIR="$HOME/.claude"
-    SYMLINK=true
-    SKIP_SUBSTITUTION=true
-  else
-    TARGET_DIR="$(pwd)/.claude"
-  fi
+  case "$IDE:$MODE" in
+    claude:global) TARGET_DIR="$HOME/.claude"; SYMLINK=true; SKIP_SUBSTITUTION=true ;;
+    claude:*)      TARGET_DIR="$(pwd)/.claude" ;;
+    cursor:global) TARGET_DIR="$HOME/.cursor" ;;
+    cursor:*)      TARGET_DIR="$(pwd)/.cursor" ;;
+    kiro:global)   TARGET_DIR="$HOME/.kiro" ;;
+    kiro:*)        TARGET_DIR="$(pwd)/.kiro" ;;
+  esac
 fi
 
 # ----- interactive prompts (project install only) ---------------------------
@@ -210,6 +238,7 @@ fi
 # ----- summary ---------------------------------------------------------------
 say "ios-workflow-claude bootstrap"
 echo "  source:        $REPO_DIR"
+echo "  ide:           $IDE"
 echo "  target:        $TARGET_DIR"
 echo "  mode:          $MODE ($([[ "$SYMLINK" == "true" ]] && echo "symlink" || echo "copy"))"
 echo "  substitution:  $([[ "$SKIP_SUBSTITUTION" == "true" ]] && echo "off" || echo "on")"
@@ -256,44 +285,164 @@ matches_filter() {
   return 1
 }
 
-run "mkdir -p '$TARGET_DIR'"
+# Rewrite frontmatter for cursor/kiro. Reads $1, writes $2 with frontmatter
+# replaced by the target IDE's convention. Body is preserved verbatim.
+# $3 = ide (cursor|kiro), $4 = kind (cmd|skill|agent)
+rewrite_frontmatter() {
+  local src="$1" dst="$2" ide="$3" kind="$4"
+  if $DRY_RUN; then
+    echo "  (dry-run) rewrite $src → $dst (ide=$ide, kind=$kind)"
+    return
+  fi
+  python3 - "$src" "$dst" "$ide" "$kind" <<'PY'
+import io, os, re, sys
 
-if $INCLUDE_COMMANDS; then
-  say "Installing commands → $TARGET_DIR/commands/"
-  run "mkdir -p '$TARGET_DIR/commands'"
-  for f in "$REPO_DIR"/commands/*.md; do
-    name="$(basename "$f" .md)"
-    matches_filter "$name" "$COMMANDS_FILTER" || continue
-    install_one "$f" "$TARGET_DIR/commands/$(basename "$f")"
-  done
-fi
+src, dst, ide, kind = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+with io.open(src, "r", encoding="utf-8") as fh:
+    text = fh.read()
 
-if $INCLUDE_SKILLS; then
-  say "Installing skills → $TARGET_DIR/skills/"
-  run "mkdir -p '$TARGET_DIR/skills'"
-  for d in "$REPO_DIR"/skills/*/; do
-    name="$(basename "$d")"
-    matches_filter "$name" "$SKILLS_FILTER" || continue
-    install_one "${d%/}" "$TARGET_DIR/skills/$name"
-  done
-fi
+# Parse YAML-ish frontmatter (no PyYAML dependency).
+desc, name = "", ""
+body = text
+m = re.match(r"^---\n(.*?)\n---\n?(.*)$", text, re.DOTALL)
+if m:
+    fm, body = m.group(1), m.group(2)
+    # Multiline values fold onto the key line until next key or end.
+    cur_key, buf = None, {}
+    for line in fm.split("\n"):
+        kmatch = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", line)
+        if kmatch:
+            cur_key = kmatch.group(1)
+            buf[cur_key] = kmatch.group(2)
+        elif cur_key is not None:
+            buf[cur_key] += "\n" + line
+    desc = buf.get("description", "").strip()
+    name = buf.get("name", "").strip()
 
-if $INCLUDE_AGENTS; then
-  say "Installing agents → $TARGET_DIR/agents/"
-  run "mkdir -p '$TARGET_DIR/agents'"
-  for f in "$REPO_DIR"/agents/*.md; do
-    install_one "$f" "$TARGET_DIR/agents/$(basename "$f")"
-  done
-fi
+# Strip wrapping quotes on description if present.
+if desc.startswith(('"', "'")) and desc.endswith(desc[0]):
+    desc = desc[1:-1]
+# YAML-safe single-line: collapse newlines, escape quotes.
+desc_one = re.sub(r"\s+", " ", desc).replace('"', '\\"').strip()
 
-if $INCLUDE_BIN; then
-  say "Installing bin/ → $TARGET_DIR/bin/"
-  run "mkdir -p '$TARGET_DIR/bin'"
-  for f in "$REPO_DIR"/bin/*.sh; do
-    install_one "$f" "$TARGET_DIR/bin/$(basename "$f")"
-    $SYMLINK || run "chmod +x '$TARGET_DIR/bin/$(basename "$f")'"
-  done
-fi
+if ide == "cursor":
+    fm_out = ["---"]
+    if desc_one:
+        fm_out.append(f'description: "{desc_one}"')
+    fm_out.append("alwaysApply: false")
+    fm_out.append("---")
+elif ide == "kiro":
+    fm_out = ["---", "inclusion: manual"]
+    if desc_one:
+        fm_out.append(f'description: "{desc_one}"')
+    fm_out.append("---")
+else:
+    fm_out = []  # unreachable
+
+out = "\n".join(fm_out) + "\n\n" + body.lstrip("\n")
+os.makedirs(os.path.dirname(dst), exist_ok=True)
+with io.open(dst, "w", encoding="utf-8") as fh:
+    fh.write(out)
+PY
+}
+
+install_claude_layout() {
+  run "mkdir -p '$TARGET_DIR'"
+
+  if $INCLUDE_COMMANDS; then
+    say "Installing commands → $TARGET_DIR/commands/"
+    run "mkdir -p '$TARGET_DIR/commands'"
+    for f in "$REPO_DIR"/commands/*.md; do
+      name="$(basename "$f" .md)"
+      matches_filter "$name" "$COMMANDS_FILTER" || continue
+      install_one "$f" "$TARGET_DIR/commands/$(basename "$f")"
+    done
+  fi
+
+  if $INCLUDE_SKILLS; then
+    say "Installing skills → $TARGET_DIR/skills/"
+    run "mkdir -p '$TARGET_DIR/skills'"
+    for d in "$REPO_DIR"/skills/*/; do
+      name="$(basename "$d")"
+      matches_filter "$name" "$SKILLS_FILTER" || continue
+      install_one "${d%/}" "$TARGET_DIR/skills/$name"
+    done
+  fi
+
+  if $INCLUDE_AGENTS; then
+    say "Installing agents → $TARGET_DIR/agents/"
+    run "mkdir -p '$TARGET_DIR/agents'"
+    for f in "$REPO_DIR"/agents/*.md; do
+      install_one "$f" "$TARGET_DIR/agents/$(basename "$f")"
+    done
+  fi
+
+  if $INCLUDE_BIN; then
+    say "Installing bin/ → $TARGET_DIR/bin/"
+    run "mkdir -p '$TARGET_DIR/bin'"
+    for f in "$REPO_DIR"/bin/*.sh; do
+      install_one "$f" "$TARGET_DIR/bin/$(basename "$f")"
+      $SYMLINK || run "chmod +x '$TARGET_DIR/bin/$(basename "$f")'"
+    done
+  fi
+}
+
+# Cursor + Kiro share the same flat-file shape: one rewritten file per
+# command/skill/agent. Skills' references/ subdirs are skipped with a warn —
+# users can import them manually if needed.
+install_flat_rules() {
+  local rules_dir ext
+  if [[ "$IDE" == "cursor" ]]; then
+    rules_dir="$TARGET_DIR/rules"
+    ext="mdc"
+  else
+    rules_dir="$TARGET_DIR/steering"
+    ext="md"
+  fi
+  run "mkdir -p '$rules_dir'"
+
+  if $INCLUDE_COMMANDS; then
+    say "Rewriting commands → $rules_dir/cmd-*.$ext"
+    for f in "$REPO_DIR"/commands/*.md; do
+      name="$(basename "$f" .md)"
+      matches_filter "$name" "$COMMANDS_FILTER" || continue
+      rewrite_frontmatter "$f" "$rules_dir/cmd-$name.$ext" "$IDE" "cmd"
+    done
+  fi
+
+  if $INCLUDE_SKILLS; then
+    say "Rewriting skills → $rules_dir/skill-*.$ext"
+    for d in "$REPO_DIR"/skills/*/; do
+      name="$(basename "$d")"
+      matches_filter "$name" "$SKILLS_FILTER" || continue
+      if [[ -f "$d/SKILL.md" ]]; then
+        rewrite_frontmatter "$d/SKILL.md" "$rules_dir/skill-$name.$ext" "$IDE" "skill"
+        if [[ -d "$d/references" ]]; then
+          warn "skill '$name' has references/ — not copied to $IDE (manual import needed)"
+        fi
+      else
+        warn "skill '$name' has no SKILL.md — skipped"
+      fi
+    done
+  fi
+
+  if $INCLUDE_AGENTS; then
+    say "Rewriting agents → $rules_dir/agent-*.$ext"
+    for f in "$REPO_DIR"/agents/*.md; do
+      name="$(basename "$f" .md)"
+      rewrite_frontmatter "$f" "$rules_dir/agent-$name.$ext" "$IDE" "agent"
+    done
+  fi
+
+  if $INCLUDE_BIN; then
+    warn "--bin is ignored for --ide $IDE (no equivalent runtime)"
+  fi
+}
+
+case "$IDE" in
+  claude) install_claude_layout ;;
+  cursor|kiro) install_flat_rules ;;
+esac
 
 # ----- substitution ----------------------------------------------------------
 substitute() {
@@ -344,7 +493,7 @@ substitute() {
     else
       sed "${sed_inplace[@]}" "${seds[@]}" "$f"
     fi
-  done < <(find "$TARGET_DIR" -type f -name "*.md" -print0)
+  done < <(find "$TARGET_DIR" -type f \( -name "*.md" -o -name "*.mdc" \) -print0)
 }
 
 substitute
@@ -353,6 +502,19 @@ echo
 ok "Done."
 echo
 echo "Next steps:"
-echo "  • Open Claude Code in this project — new slash commands appear in tab-completion."
-[[ "$INCLUDE_BIN" == "true" && "$MODE" != "global" ]] && echo "  • For local-fast / local-smart: install ollama + pull models (see README)."
-[[ "$MODE" == "global" ]] && echo "  • Commands installed globally are NOT substituted — set placeholders per-project via CLAUDE.md or shadow them in .claude/commands/."
+case "$IDE" in
+  claude)
+    echo "  • Open Claude Code in this project — new slash commands appear in tab-completion."
+    [[ "$INCLUDE_BIN" == "true" && "$MODE" != "global" ]] && echo "  • For local-fast / local-smart: install ollama + pull models (see README)."
+    [[ "$MODE" == "global" ]] && echo "  • Commands installed globally are NOT substituted — set placeholders per-project via CLAUDE.md or shadow them in .claude/commands/."
+    ;;
+  cursor)
+    echo "  • Open Cursor in this project — rules under $TARGET_DIR/rules/ load automatically."
+    echo "  • All rules ship with \`alwaysApply: false\` — invoke explicitly via @rule-name in Composer/Chat."
+    echo "  • Edit individual .mdc files to switch to auto-attach via \`globs:\` patterns."
+    ;;
+  kiro)
+    echo "  • Open Kiro in this project — steering files under $TARGET_DIR/steering/ are listed in the Steering panel."
+    echo "  • All steering ships with \`inclusion: manual\` — attach in chat when needed, or change to \`always\` / \`fileMatch\` per file."
+    ;;
+esac

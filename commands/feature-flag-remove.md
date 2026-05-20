@@ -101,7 +101,7 @@ If the flag controls a V1/V2 flow with separate ViewControllers and components, 
 - ViewControllers V1
 
 **V2 Entry Points (NEVER remove):**
-- Deep links V2 (e.g., `guide-destination`)
+- Deep links V2 (e.g., `<v2-deeplink-scheme>`)
 - Universal Link Handlers V2
 - Coordinators V2 (e.g., `<FeatureA>Coordinator`, `<FeatureB>Coordinator`)
 

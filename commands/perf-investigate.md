@@ -68,8 +68,8 @@ Look for these patterns first (based on past iOS investigations):
 
 | Pattern | Hint |
 |---|---|
-| `*Context.make` factory NOT in `PlaceActionsViewModelCache.shared.getOrCreateViewModel(...)` while siblings use it | Compare line numbers in `PlaceActionsFactory.swift`: 205 (<FeatureA>), 297 (<FeatureB>), 473 (<FeatureC>), 554 (<FeatureD>). The outlier feature was tracked as {{TICKET_PREFIX}}-XXXX. |
-| `CTTelephonyNetworkInfo.__allocating_init` in top-N inclusive | Per-instance NetworkConnectivityChecker. Use `NetworkConnectivityChecker.shared` ({{TICKET_PREFIX}}-XXXX). |
+| `*Context.make` factory NOT going through a shared ViewModel cache while siblings use it | Compare entry points in your `<Feature>Factory.swift`: outlier features bypass the cache and re-create ViewModels on every push. Tracked as {{TICKET_PREFIX}}-XXXX. |
+| `CTTelephonyNetworkInfo.__allocating_init` in top-N inclusive | Per-instance network/connectivity checker being re-allocated. Promote to a `.shared` singleton ({{TICKET_PREFIX}}-XXXX). |
 | ROOT CYCLE through `TagIndexProjection<Int>` in a SwiftUI carousel | `.tag()` on ForEach items, closures capturing `self`. Convert closures to `static func` + `[weak]` ({{TICKET_PREFIX}}-XXXX). |
 | ROOT CYCLE involving `_ContiguousArrayStorage<Optional<...Coordinator...>>` or `SwiftUI.StoredLocation<Coordinator>` | `@State` reference type leaked via closure capturing `_state` wrapper. Use `[weak coord = self.coordinator]` not `[coordState = _coordinator]`. |
 | Cycle involving `UINavigationController.viewControllers ↔ host VC ↔ @State coordinator` | UIViewControllerRepresentable with fresh nav. Add `dismantleUIViewController` clearing `viewControllers`. |

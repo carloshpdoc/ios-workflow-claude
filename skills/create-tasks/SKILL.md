@@ -41,11 +41,11 @@ If ambiguous (e.g., meeting notes mention both platforms), ask the user which pl
 - **Issue type:** Task
 - **Story points field:** `customfield_10034`
 - **Allowed story point values:** 1, 2, 3 only
-- **Board:** https://{{JIRA_HOST}}/jira/software/c/projects/{{TICKET_PREFIX}}/boards/105/backlog
+- **Board:** https://{{JIRA_HOST}}/jira/software/c/projects/{{TICKET_PREFIX}}/boards/{{JIRA_BOARD_ID}}/backlog
 - **Epic:** Link tasks to an epic via `"parent": "<EPIC-KEY>"` in `additional_fields`. Ask the user which epic to use if not specified.
 - **Assignee:** Ask the user who to assign tasks to before creating tickets. Use email or display name for the `assignee` field.
-- **Sprint:** Default to the current active sprint. Fetch via `mcp__mcp-atlassian__jira_get_sprints_from_board` (board ID `105`, state `active`). Set via `"customfield_10020": <sprint_id>` in `additional_fields`. If no active sprint or the user specifies a different one, ask for input.
-- **Next sprint (for feature flag cleanup tickets):** Fetch via `mcp__mcp-atlassian__jira_get_sprints_from_board` (board ID `105`, state `future`) and take the first result. If no future sprint exists yet, ask the user whether to create the cleanup ticket in the backlog (omit `customfield_10020`) or wait.
+- **Sprint:** Default to the current active sprint. Fetch via `mcp__mcp-atlassian__jira_get_sprints_from_board` (board ID `{{JIRA_BOARD_ID}}`, state `active`). Set via `"customfield_10020": <sprint_id>` in `additional_fields`. If no active sprint or the user specifies a different one, ask for input.
+- **Next sprint (for feature flag cleanup tickets):** Fetch via `mcp__mcp-atlassian__jira_get_sprints_from_board` (board ID `{{JIRA_BOARD_ID}}`, state `future`) and take the first result. If no future sprint exists yet, ask the user whether to create the cleanup ticket in the backlog (omit `customfield_10020`) or wait.
 ---
  
 ## Platform-Specific Configuration
