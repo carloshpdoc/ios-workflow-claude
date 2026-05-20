@@ -1,0 +1,62 @@
+{
+  "name": "carloshpdoc-plugins",
+  "owner": {
+    "name": "Carloshperc",
+    "email": "carloshenrique.pdoc@gmail.com"
+  },
+  "description": "iOS-opinionated Claude Code workflow automation: Swift 6 migration, Apollo→native SDK removal, stacked PRs, Jira integration, Xcode build optimization.",
+  "plugins": [
+    {
+      "name": "xcode-build-suite",
+      "source": "./",
+      "strict": false,
+      "description": "End-to-end Xcode build-time optimization: benchmark → analyze (compile/project/SPM) → recommend → apply with approval → re-benchmark. Standalone, no templating required.",
+      "homepage": "https://github.com/carloshpdoc/ios-workflow-claude",
+      "repository": "https://github.com/carloshpdoc/ios-workflow-claude",
+      "license": "Apache-2.0",
+      "category": "ios",
+      "keywords": ["xcode", "build", "performance", "swift", "spm", "ios"],
+      "skills": [
+        "./skills/xcode-build-orchestrator",
+        "./skills/xcode-build-benchmark",
+        "./skills/xcode-compilation-analyzer",
+        "./skills/xcode-project-analyzer",
+        "./skills/xcode-build-fixer",
+        "./skills/spm-build-analysis"
+      ]
+    },
+    {
+      "name": "ios-workflow",
+      "source": "./",
+      "strict": false,
+      "description": "iOS workflow automation: Swift 6 migration pipeline, Apollo→native SDK removal, stacked PRs ≤600 lines via gh CLI, Jira-driven PR opener, feature-flag cleanup, perf playbook, SwiftLint fixer. Commands and agents use {{PLACEHOLDER}} templates — install via bootstrap.sh from the repo for per-project substitution, or use this plugin to preview before adopting.",
+      "homepage": "https://github.com/carloshpdoc/ios-workflow-claude",
+      "repository": "https://github.com/carloshpdoc/ios-workflow-claude",
+      "license": "Apache-2.0",
+      "category": "ios",
+      "keywords": ["ios", "swift", "swift6", "apollo", "jira", "pr-workflow", "github-cli", "stacked-prs", "swiftlint"],
+      "commands": ["./commands/"],
+      "agents": [
+        "./agents/ios-code-reviewer.md",
+        "./agents/ios-test-writer.md",
+        "./agents/swiftlint-fixer.md"
+      ]
+    },
+    {
+      "name": "claude-utilities",
+      "source": "./",
+      "strict": false,
+      "description": "Cross-stack utilities: turn recent technical work into LinkedIn/Twitter drafts (`content`), federated knowledge-base search across ~/Desktop/knowledge + repo + memory dir (`knowledge`), turn meeting notes into Jira tasks (`create-tasks`).",
+      "homepage": "https://github.com/carloshpdoc/ios-workflow-claude",
+      "repository": "https://github.com/carloshpdoc/ios-workflow-claude",
+      "license": "Apache-2.0",
+      "category": "productivity",
+      "keywords": ["content", "linkedin", "knowledge-base", "jira", "task-management"],
+      "skills": [
+        "./skills/content",
+        "./skills/knowledge",
+        "./skills/create-tasks"
+      ]
+    }
+  ]
+}

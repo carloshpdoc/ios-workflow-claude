@@ -1,0 +1,12 @@
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+node_modules/
+
+# Local-only notes between me and Claude (planning, rollout state, drafts)
+.local/
+
+# Content drafts (LinkedIn, Twitter, etc.) before posting
+/content/

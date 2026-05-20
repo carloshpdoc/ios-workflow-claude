@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment_1": "Drop this into .claude/settings.json at your project root to auto-register the marketplace for the whole team. Teammates who trust the project folder are prompted to install. See https://code.claude.com/docs/en/plugin-marketplaces#require-marketplaces-for-your-team",
+  "extraKnownMarketplaces": {
+    "carloshpdoc-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "carloshpdoc/ios-workflow-claude"
+      }
+    }
+  },
+  "_comment_2": "Pin specific plugins to be enabled by default for everyone on the project. Comment out the ones you don't want. The placeholder-heavy `ios-workflow` plugin only works well after running bootstrap.sh — recommend keeping it OFF here and installing via bootstrap.sh instead.",
+  "enabledPlugins": {
+    "xcode-build-suite@carloshpdoc-plugins": true,
+    "claude-utilities@carloshpdoc-plugins": true
+  }
+}
