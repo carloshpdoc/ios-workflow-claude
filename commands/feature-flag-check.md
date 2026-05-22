@@ -11,13 +11,13 @@ Investigate the feature flag **$ARGUMENTS** and produce a detailed investigation
 Search for the flag in RemoteConfig files:
 
 ```
-Grep: "$ARGUMENTS" in RemoteConfigKey.swift
-Grep: "$ARGUMENTS" in RemoteConfigKeyDefaultValueFactory.swift
+Grep: "$ARGUMENTS" in {{FLAG_KEY_FILE}}
+Grep: "$ARGUMENTS" in {{FLAG_DEFAULTS_FILE}}.swift
 ```
 
 Document:
-- The exact case name in `RemoteConfigKey`
-- The default value from `RemoteConfigKeyDefaultValueFactory`
+- The exact case name in `{{FLAG_KEY_ENUM}}`
+- The default value from `{{FLAG_DEFAULTS_FILE}}`
 - The value type (Bool, String, Int, etc.)
 
 ### 2. Find All Flag Usages
@@ -25,7 +25,7 @@ Document:
 Search for all code using this flag:
 
 ```
-Grep: "RemoteConfigKey.$ARGUMENTS" in *.swift
+Grep: "{{FLAG_KEY_ENUM}}.$ARGUMENTS" in *.swift
 Grep: ".$ARGUMENTS" in *.swift (for shorthand usage)
 Grep: the flag's string key in all files
 ```
@@ -106,7 +106,7 @@ Create `docs/feature-flags/issues/$ARGUMENTS.md`:
 
 | Property | Value |
 |----------|-------|
-| RemoteConfigKey | `$ARGUMENTS` |
+| {{FLAG_KEY_ENUM}} | `$ARGUMENTS` |
 | Type | <Bool/String/Int> |
 | Default Value | <value> |
 | Production Value | <value> (verify in Firebase) |

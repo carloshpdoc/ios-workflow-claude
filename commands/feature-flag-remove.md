@@ -51,7 +51,7 @@ git checkout -b feature/remove-flag-$ARGUMENTS
 **IMPORTANT:** Before modifying RemoteConfig files, check for open PRs that touch the same files:
 
 ```bash
-gh pr list --state open --json number,title,files --jq '.[] | select(.files[]?.path | test("RemoteConfigKey|RemoteConfigKeyDefaultValueFactory")) | "PR #\(.number): \(.title)"'
+gh pr list --state open --json number,title,files --jq '.[] | select(.files[]?.path | test("{{FLAG_KEY_ENUM}}|{{FLAG_DEFAULTS_FILE}}")) | "PR #\(.number): \(.title)"'
 ```
 
 **If PRs are found:**
@@ -62,7 +62,7 @@ gh pr list --state open --json number,title,files --jq '.[] | select(.files[]?.p
    - Coordinate with the other developer to avoid conflicts
    - Proceed only with explicit user confirmation
 
-**Why this matters:** RemoteConfigKey.swift and RemoteConfigKeyDefaultValueFactory.swift are shared files. Multiple PRs modifying them simultaneously will cause merge conflicts or overwrites.
+**Why this matters:** {{FLAG_KEY_FILE}} and {{FLAG_DEFAULTS_FILE}}.swift are shared files. Multiple PRs modifying them simultaneously will cause merge conflicts or overwrites.
 
 ### 4. Read the Investigation
 
@@ -76,10 +76,10 @@ Read `docs/feature-flags/issues/$ARGUMENTS.md` and understand:
 
 ### 5. Remove Flag Definition
 
-Edit `{{APP}}/Helpers/RemoteConfig/RemoteConfigKey.swift`:
+Edit `{{APP}}/Helpers/RemoteConfig/{{FLAG_KEY_FILE}}`:
 - Remove the case for this flag
 
-Edit `{{APP}}/Helpers/RemoteConfig/RemoteConfigKeyDefaultValueFactory.swift`:
+Edit `{{APP}}/Helpers/RemoteConfig/{{FLAG_DEFAULTS_FILE}}.swift`:
 - Remove the case from the switch statement
 
 ### 6. Delete Dead Code Files
@@ -122,8 +122,8 @@ grep -r "ModuleName" --include="*.swift" . | grep -v "V1ModulePath"
 #### C. Safe Execution Order
 
 1. **FIRST:** Remove references in coordinators/handlers
-   - Edit `UniversalLinkPathOperation.swift` - remove V1 case
-   - Edit `AppCoordinator+UniversalLinkContent.swift` - remove V1 method
+   - Edit ``<your-universal-link-router>.swift`` - remove V1 case
+   - Edit ``<your-app-coordinator>+UniversalLinkContent.swift`` - remove V1 method
    - Remove V1 protocol conformances
 
 2. **SECOND:** Intermediate build
@@ -248,7 +248,7 @@ Create `docs/feature-flags/reports/$ARGUMENTS.md`:
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| Flag removed from RemoteConfigKey | PASS/FAIL | |
+| Flag removed from {{FLAG_KEY_ENUM}} | PASS/FAIL | |
 | Flag removed from DefaultValueFactory | PASS/FAIL | |
 | All code usages removed | PASS/FAIL | X usages removed |
 | Dead code files deleted | PASS/FAIL | X files deleted |

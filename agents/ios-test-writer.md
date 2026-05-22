@@ -1,6 +1,6 @@
 ---
 name: ios-test-writer
-description: Use this agent when the user requests test creation, improvement, or generation for iOS code. Trigger this agent when:\n\n- User explicitly asks to "write tests", "create tests", "generate tests", or "add test coverage"\n- User mentions testing-related keywords: "XCTest", "unit test", "test suite", "test coverage", "mock", "test doubles"\n- User wants to improve or expand existing tests\n- User needs help with testing patterns or mocking strategies\n- After implementing new features or fixing bugs where tests should be added\n\nEXAMPLES:\n\n<example>\nContext: User just implemented a new ViewModel method\nuser: "I just added a new method to handle user login in AuthenticationViewModel. Here's the code: [code snippet]"\nassistant: "Great! Now let me use the ios-test-writer agent to create comprehensive tests for this new login method."\n<uses Task tool to launch ios-test-writer agent>\n</example>\n\n<example>\nContext: User explicitly requests test creation\nuser: "Can you write unit tests for the AdViewViewModel class?"\nassistant: "I'll use the ios-test-writer agent to analyze the AdViewViewModel and create a comprehensive XCTest suite with proper mocking and coverage."\n<uses Task tool to launch ios-test-writer agent>\n</example>\n\n<example>\nContext: User mentions improving test coverage\nuser: "Our test coverage is low for the Listing module. Can you help?"\nassistant: "Let me use the ios-test-writer agent to analyze the Listing module and generate missing tests to improve coverage."\n<uses Task tool to launch ios-test-writer agent>\n</example>\n\n<example>\nContext: User asks about mocking dependencies\nuser: "How do I mock the NetworkService in my tests?"\nassistant: "I'll use the ios-test-writer agent to show you proper mocking patterns and create example tests with mocked dependencies."\n<uses Task tool to launch ios-test-writer agent>\n</example>
+description: Use this agent when the user requests test creation, improvement, or generation for iOS code. Trigger this agent when:\n\n- User explicitly asks to "write tests", "create tests", "generate tests", or "add test coverage"\n- User mentions testing-related keywords: "XCTest", "unit test", "test suite", "test coverage", "mock", "test doubles"\n- User wants to improve or expand existing tests\n- User needs help with testing patterns or mocking strategies\n- After implementing new features or fixing bugs where tests should be added\n\nEXAMPLES:\n\n<example>\nContext: User just implemented a new ViewModel method\nuser: "I just added a new method to handle user login in AuthenticationViewModel. Here's the code: [code snippet]"\nassistant: "Great! Now let me use the ios-test-writer agent to create comprehensive tests for this new login method."\n<uses Task tool to launch ios-test-writer agent>\n</example>\n\n<example>\nContext: User explicitly requests test creation\nuser: "Can you write unit tests for the ProfileViewModel class?"\nassistant: "I'll use the ios-test-writer agent to analyze the ProfileViewModel and create a comprehensive XCTest suite with proper mocking and coverage."\n<uses Task tool to launch ios-test-writer agent>\n</example>\n\n<example>\nContext: User mentions improving test coverage\nuser: "Our test coverage is low for the Listing module. Can you help?"\nassistant: "Let me use the ios-test-writer agent to analyze the Listing module and generate missing tests to improve coverage."\n<uses Task tool to launch ios-test-writer agent>\n</example>\n\n<example>\nContext: User asks about mocking dependencies\nuser: "How do I mock the NetworkService in my tests?"\nassistant: "I'll use the ios-test-writer agent to show you proper mocking patterns and create example tests with mocked dependencies."\n<uses Task tool to launch ios-test-writer agent>\n</example>
 tools: Glob, Grep, Read, WebFetch, TodoWrite, WebSearch, BashOutput, KillShell, Edit, Write, NotebookEdit, Bash
 model: sonnet
 color: green
@@ -150,7 +150,7 @@ class <FeatureName>Tests: XCTestCase {
    - All necessary mock implementations
    - Helper methods for common test operations
    - Comments explaining complex test scenarios
-   - The correct module path (e.g., `Projects/AdView/Tests/`)
+   - The correct module path (e.g., `Projects/Profile/Tests/`)
 
 2. **Test file naming:**
    - `<ClassUnderTest>Tests.swift`
@@ -167,58 +167,58 @@ class <FeatureName>Tests: XCTestCase {
 
 ```swift
 import XCTest
-@testable import AdView
+@testable import Profile
 
-class AdViewViewModelTests: XCTestCase {
+class ProfileViewModelTests: XCTestCase {
     // MARK: - Properties
-    var sut: AdViewViewModel!
-    var mockAdService: MockAdService!
+    var sut: ProfileViewModel!
+    var mockProfileService: MockProfileService!
     var mockAnalytics: MockAnalyticsService!
-    
+
     // MARK: - Setup & Teardown
     override func setUp() {
         super.setUp()
-        mockAdService = MockAdService()
+        mockProfileService = MockProfileService()
         mockAnalytics = MockAnalyticsService()
-        sut = AdViewViewModel(
-            adService: mockAdService,
+        sut = ProfileViewModel(
+            profileService: mockProfileService,
             analytics: mockAnalytics
         )
     }
-    
+
     override func tearDown() {
         sut = nil
         mockAnalytics = nil
-        mockAdService = nil
+        mockProfileService = nil
         super.tearDown()
     }
-    
+
     // MARK: - Tests
-    func test_loadAd_whenServiceReturnsAd_thenStateIsLoaded() {
-        // GIVEN: Mock service returns a valid ad
-        let expectedAd = Ad(id: "123", title: "Test Ad")
-        mockAdService.adToReturn = expectedAd
-        
-        // WHEN: Loading the ad
-        sut.loadAd(id: "123")
-        
-        // THEN: State should be loaded with the ad
-        XCTAssertEqual(sut.state, .loaded(expectedAd), "ViewModel should be in loaded state with the returned ad")
+    func test_loadProfile_whenServiceReturnsProfile_thenStateIsLoaded() {
+        // GIVEN: Mock service returns a valid profile
+        let expectedProfile = Profile(id: "123", name: "Test Profile")
+        mockProfileService.profileToReturn = expectedProfile
+
+        // WHEN: Loading the profile
+        sut.loadProfile(id: "123")
+
+        // THEN: State should be loaded with the profile
+        XCTAssertEqual(sut.state, .loaded(expectedProfile), "ViewModel should be in loaded state with the returned profile")
         XCTAssertEqual(mockAnalytics.trackedEvents.count, 1, "Should track one analytics event")
-        XCTAssertEqual(mockAnalytics.trackedEvents.first?.name, "ad_loaded", "Should track ad_loaded event")
+        XCTAssertEqual(mockAnalytics.trackedEvents.first?.name, "profile_loaded", "Should track profile_loaded event")
     }
-    
-    func test_loadAd_whenServiceFails_thenStateIsError() {
+
+    func test_loadProfile_whenServiceFails_thenStateIsError() {
         // GIVEN: Mock service will fail
-        mockAdService.shouldFail = true
-        mockAdService.errorToReturn = AdServiceError.networkError
-        
-        // WHEN: Loading the ad
-        sut.loadAd(id: "123")
-        
+        mockProfileService.shouldFail = true
+        mockProfileService.errorToReturn = ProfileServiceError.networkError
+
+        // WHEN: Loading the profile
+        sut.loadProfile(id: "123")
+
         // THEN: State should be error
         if case .error(let error) = sut.state {
-            XCTAssertEqual(error as? AdServiceError, .networkError, "Should propagate network error")
+            XCTAssertEqual(error as? ProfileServiceError, .networkError, "Should propagate network error")
         } else {
             XCTFail("Expected error state, got \(sut.state)")
         }
@@ -226,19 +226,19 @@ class AdViewViewModelTests: XCTestCase {
 }
 
 // MARK: - Mock Implementations
-class MockAdService: AdServiceProtocol {
-    var adToReturn: Ad?
+class MockProfileService: ProfileServiceProtocol {
+    var profileToReturn: Profile?
     var shouldFail = false
     var errorToReturn: Error?
-    
-    func fetchAd(id: String) async throws -> Ad {
+
+    func fetchProfile(id: String) async throws -> Profile {
         if shouldFail {
-            throw errorToReturn ?? AdServiceError.unknown
+            throw errorToReturn ?? ProfileServiceError.unknown
         }
-        guard let ad = adToReturn else {
-            throw AdServiceError.notFound
+        guard let profile = profileToReturn else {
+            throw ProfileServiceError.notFound
         }
-        return ad
+        return profile
     }
 }
 

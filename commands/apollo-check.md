@@ -71,9 +71,9 @@ Grep: the consumer's class name in coordinator/factory files to trace the full c
 For each consumer, trace the full instantiation chain back to the entry point (Coordinator → Factory → ViewModel → Repository). At any point in that chain, check if a feature flag controls whether the code path is reached.
 
 **For each feature flag found**, document:
-- The flag key (e.g., `is_new_interests_available`)
-- Which `RemoteConfigKey` case it maps to
-- What the default value is (check `RemoteConfigKeyDefaultValueFactory`)
+- The flag key (e.g., `is_<feature>_available`)
+- Which `{{FLAG_KEY_ENUM}}` case it maps to
+- What the default value is (check `{{FLAG_DEFAULTS_FILE}}`)
 - Which code branch uses the repository (the `true` or `false` path)
 
 > **Why this matters:** If a repository is only used behind a feature flag that has been permanently disabled, the entire repository + consumer chain may be dead code. The user can validate this in Firebase Remote Config before deciding to **delete** instead of **migrate**, saving the full migration effort.
@@ -147,7 +147,7 @@ Create the file `docs/apollo-removal/issues/$ARGUMENTS.md` using the Write tool 
 | 1 | <path> | <how> | <which methods> | yes/no |
 
 ### Feature Flags
-| Flag Key | RemoteConfigKey | Default Value | Branch Using Repo | Status |
+| Flag Key | {{FLAG_KEY_ENUM}} | Default Value | Branch Using Repo | Status |
 |----------|-----------------|---------------|-------------------|--------|
 | <key or "None"> | <case name> | <true/false> | <true/false branch> | <active/disabled — check Firebase> |
 

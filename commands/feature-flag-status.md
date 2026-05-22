@@ -67,7 +67,7 @@ Show the recommended next flags to remove from the status file:
 
 ## Notes
 
-- Total flags are counted from `RemoteConfigKey.swift`
+- Total flags are counted from `{{FLAG_KEY_FILE}}`
 - Part of Firebase Feature Flags Maintenance initiative
 - See investigation files in `docs/feature-flags/issues/`
 - See review reports in `docs/feature-flags/reports/`

@@ -36,6 +36,7 @@ APP="${APP:-}"
 APP_TESTS="${APP_TESTS:-}"
 TICKET_PREFIX="${TICKET_PREFIX:-}"
 JIRA_HOST="${JIRA_HOST:-}"
+JIRA_BOARD_ID="${JIRA_BOARD_ID:-}"
 GITHUB_OWNER="${GITHUB_OWNER:-}"
 GITHUB_HANDLE="${GITHUB_HANDLE:-}"
 BUNDLE_ID="${BUNDLE_ID:-}"
@@ -44,6 +45,9 @@ PROJECT_DIR="${PROJECT_DIR:-}"
 FONT_SCALE_TYPE="${FONT_SCALE_TYPE:-}"
 FONT_SIZE_TYPE="${FONT_SIZE_TYPE:-}"
 COMPANY_HANDLE="${COMPANY_HANDLE:-}"
+FLAG_KEY_ENUM="${FLAG_KEY_ENUM:-}"      # e.g. FeatureFlagKey
+FLAG_KEY_FILE="${FLAG_KEY_FILE:-}"      # e.g. FeatureFlagKey.swift
+FLAG_DEFAULTS_FILE="${FLAG_DEFAULTS_FILE:-}"  # e.g. FeatureFlagDefaults
 GIT_USER="${GIT_USER:-$(git config user.name 2>/dev/null || echo "")}"
 GIT_NAME="${GIT_NAME:-$GIT_USER}"
 GIT_EMAIL="${GIT_EMAIL:-$(git config user.email 2>/dev/null || echo "")}"
@@ -87,6 +91,10 @@ PLACEHOLDER VALUES (required for project install; ignored for --global)
   --font-scale <type>    DS font scale type                → {{FONT_SCALE_TYPE}}
   --font-size <type>     DS font size type                 → {{FONT_SIZE_TYPE}}
   --company <name>       Company handle / domain           → {{COMPANY_HANDLE}}
+  --jira-board <id>      Jira board id (e.g. 105)          → {{JIRA_BOARD_ID}}
+  --flag-key-enum <name> Flag-key enum                     → {{FLAG_KEY_ENUM}}
+  --flag-key-file <name> Flag-key file (with .swift)       → {{FLAG_KEY_FILE}}
+  --flag-defaults <name> Flag-defaults file/class          → {{FLAG_DEFAULTS_FILE}}
   --git-user <name>      (auto from `git config user.name`)
   --git-email <addr>     (auto from `git config user.email`)
 
@@ -148,6 +156,10 @@ while [[ $# -gt 0 ]]; do
     --font-scale)       FONT_SCALE_TYPE="$2"; shift 2 ;;
     --font-size)        FONT_SIZE_TYPE="$2"; shift 2 ;;
     --company)          COMPANY_HANDLE="$2"; shift 2 ;;
+    --jira-board)       JIRA_BOARD_ID="$2"; shift 2 ;;
+    --flag-key-enum)    FLAG_KEY_ENUM="$2"; shift 2 ;;
+    --flag-key-file)    FLAG_KEY_FILE="$2"; shift 2 ;;
+    --flag-defaults)    FLAG_DEFAULTS_FILE="$2"; shift 2 ;;
     --git-user)         GIT_USER="$2"; GIT_NAME="$2"; shift 2 ;;
     --git-email)        GIT_EMAIL="$2"; shift 2 ;;
     --target)           TARGET_DIR="$2"; shift 2 ;;
@@ -245,7 +257,7 @@ echo "  substitution:  $([[ "$SKIP_SUBSTITUTION" == "true" ]] && echo "off" || e
 echo "  include:       $($INCLUDE_COMMANDS && echo -n "commands ")$($INCLUDE_SKILLS && echo -n "skills ")$($INCLUDE_AGENTS && echo -n "agents ")$($INCLUDE_BIN && echo -n "bin ")"
 if [[ "$MODE" != "global" && "$SKIP_SUBSTITUTION" == "false" ]]; then
   echo "  placeholders:"
-  for v in APP APP_TESTS TICKET_PREFIX JIRA_HOST GITHUB_OWNER GITHUB_HANDLE BUNDLE_ID BUNDLE_ID_PREFIX PROJECT_DIR FONT_SCALE_TYPE FONT_SIZE_TYPE COMPANY_HANDLE GIT_USER GIT_NAME GIT_EMAIL; do
+  for v in APP APP_TESTS TICKET_PREFIX JIRA_HOST JIRA_BOARD_ID GITHUB_OWNER GITHUB_HANDLE BUNDLE_ID BUNDLE_ID_PREFIX PROJECT_DIR FONT_SCALE_TYPE FONT_SIZE_TYPE COMPANY_HANDLE FLAG_KEY_ENUM FLAG_KEY_FILE FLAG_DEFAULTS_FILE GIT_USER GIT_NAME GIT_EMAIL; do
     val="${!v}"
     [[ -n "$val" ]] && printf "    %-20s = %s\n" "$v" "$val"
   done
@@ -470,6 +482,10 @@ substitute() {
   add_sed FONT_SCALE_TYPE  "$FONT_SCALE_TYPE"
   add_sed FONT_SIZE_TYPE   "$FONT_SIZE_TYPE"
   add_sed COMPANY_HANDLE   "$COMPANY_HANDLE"
+  add_sed JIRA_BOARD_ID    "$JIRA_BOARD_ID"
+  add_sed FLAG_KEY_ENUM    "$FLAG_KEY_ENUM"
+  add_sed FLAG_KEY_FILE    "$FLAG_KEY_FILE"
+  add_sed FLAG_DEFAULTS_FILE "$FLAG_DEFAULTS_FILE"
   add_sed GIT_USER         "$GIT_USER"
   add_sed GIT_NAME         "$GIT_NAME"
   add_sed GIT_EMAIL        "$GIT_EMAIL"
