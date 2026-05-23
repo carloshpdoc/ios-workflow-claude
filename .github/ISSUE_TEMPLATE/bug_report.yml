@@ -1,0 +1,53 @@
+name: Bug report
+description: Something in this repo isn't working (a command, skill, agent, bootstrap.sh, plugin install)
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - bootstrap.sh
+        - "commands/ (slash command)"
+        - "skills/"
+        - "agents/"
+        - "Cursor (--ide cursor)"
+        - "Kiro (--ide kiro)"
+        - "Plugin install via marketplace"
+        - "Documentation / README"
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Specific command / skill / agent name (if applicable)
+      placeholder: "e.g. /swift6-fix, xcode-build-orchestrator, ios-test-writer"
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened
+      description: Include the exact command you ran and its output (or screenshot)
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      value: |
+        - macOS version:
+        - Claude Code / Cursor / Kiro version:
+        - Xcode version (if iOS-related):
+        - bootstrap.sh flags used:
+    validations:
+      required: false
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

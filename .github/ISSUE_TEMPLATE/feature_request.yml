@@ -1,0 +1,41 @@
+name: Feature request / new command
+description: Propose a new command, skill, agent, or improvement
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of addition?
+      options:
+        - New slash command (commands/)
+        - New skill (skills/)
+        - New agent (agents/)
+        - New placeholder for bootstrap.sh
+        - New target IDE (--ide)
+        - Improvement to an existing item
+    validations:
+      required: true
+  - type: textarea
+    id: pain
+    attributes:
+      label: What pain are you solving?
+      description: Concrete scenario where you'd reach for this. Better if you've already done the manual version a few times.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed behavior
+      description: What does the command/skill/agent do step-by-step? What does it output? When should Claude invoke it?
+    validations:
+      required: true
+  - type: textarea
+    id: existing
+    attributes:
+      label: Existing alternative
+      description: How do you do this today (manually, via another tool, via a different command)? Why isn't that enough?
+  - type: textarea
+    id: scope
+    attributes:
+      label: Out of scope
+      description: What this feature should NOT do — helps prevent scope creep during review.

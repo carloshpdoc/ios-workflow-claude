@@ -203,6 +203,10 @@ These templates use `{{...}}` placeholders. After copying into a project, do a o
 | `{{GIT_NAME}}` | Display name on commits | `My Name` |
 | `{{FONT_SCALE_TYPE}}` | Design-system font scale type | `MyAppFontScale` |
 | `{{FONT_SIZE_TYPE}}` | Design-system font size type | `MyAppFontSize` |
+| `{{JIRA_BOARD_ID}}` | Jira board ID (used by `create-tasks` skill) | `42` |
+| `{{FLAG_KEY_ENUM}}` | Feature-flag key enum name | `FeatureFlagKey` |
+| `{{FLAG_KEY_FILE}}` | Feature-flag key file (with `.swift`) | `FeatureFlagKey.swift` |
+| `{{FLAG_DEFAULTS_FILE}}` | Feature-flag defaults file/class | `FeatureFlagDefaults` |
 
 ### Quick replace (macOS/Linux)
 
@@ -214,14 +218,22 @@ TICKET=PROJ
 JIRA=mycompany.atlassian.net
 OWNER=mycompany
 HANDLE=myhandle
+BOARD=42
+FLAG_ENUM=FeatureFlagKey
+FLAG_FILE=FeatureFlagKey.swift
+FLAG_DEFAULTS=FeatureFlagDefaults
 
 find .claude -name "*.md" -type f -exec sed -i '' \
   -e "s|{{APP}}|$APP|g" \
   -e "s|{{APP_TESTS}}|$TESTS|g" \
   -e "s|{{TICKET_PREFIX}}|$TICKET|g" \
   -e "s|{{JIRA_HOST}}|$JIRA|g" \
+  -e "s|{{JIRA_BOARD_ID}}|$BOARD|g" \
   -e "s|{{GITHUB_OWNER}}|$OWNER|g" \
   -e "s|{{GITHUB_HANDLE}}|$HANDLE|g" \
+  -e "s|{{FLAG_KEY_ENUM}}|$FLAG_ENUM|g" \
+  -e "s|{{FLAG_KEY_FILE}}|$FLAG_FILE|g" \
+  -e "s|{{FLAG_DEFAULTS_FILE}}|$FLAG_DEFAULTS|g" \
   {} +
 ```
 

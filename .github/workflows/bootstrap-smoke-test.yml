@@ -1,0 +1,86 @@
+name: bootstrap smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bootstrap.sh'
+      - 'commands/**'
+      - 'skills/**'
+      - 'agents/**'
+      - '.github/workflows/bootstrap-smoke-test.yml'
+  pull_request:
+    paths:
+      - 'bootstrap.sh'
+      - 'commands/**'
+      - 'skills/**'
+      - 'agents/**'
+      - '.github/workflows/bootstrap-smoke-test.yml'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ide: [claude, cursor, kiro]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax check bootstrap.sh
+        run: bash -n bootstrap.sh
+
+      - name: Real install — ide=${{ matrix.ide }}
+        run: |
+          mkdir -p /tmp/smoke-${{ matrix.ide }}
+          cd /tmp/smoke-${{ matrix.ide }}
+          ${{ github.workspace }}/bootstrap.sh \
+            --ide ${{ matrix.ide }} \
+            --app SmokeApp \
+            --ticket SMOKE \
+            --owner smokeorg \
+            --handle smokehandle \
+            --jira smokeorg.atlassian.net \
+            --jira-board 99 \
+            --flag-key-enum FeatureFlagKey \
+            --flag-key-file FeatureFlagKey.swift \
+            --flag-defaults FeatureFlagDefaults \
+            --bundle-id com.smokeorg.smokeapp
+
+      - name: Verify expected layout
+        run: |
+          cd /tmp/smoke-${{ matrix.ide }}
+          case "${{ matrix.ide }}" in
+            claude)
+              test -d .claude/commands && test -d .claude/skills && test -d .claude/agents
+              ;;
+            cursor)
+              test -d .cursor/rules
+              ls .cursor/rules/cmd-*.mdc | head -1
+              ls .cursor/rules/skill-*.mdc | head -1
+              ls .cursor/rules/agent-*.mdc | head -1
+              ;;
+            kiro)
+              test -d .kiro/steering
+              ls .kiro/steering/cmd-*.md | head -1
+              ls .kiro/steering/skill-*.md | head -1
+              ls .kiro/steering/agent-*.md | head -1
+              ;;
+          esac
+
+      - name: Verify placeholders were substituted
+        run: |
+          cd /tmp/smoke-${{ matrix.ide }}
+          target_dir=$(ls -d .claude .cursor .kiro 2>/dev/null | head -1)
+          # Spot-check: SmokeApp must appear at least once in the installed files
+          grep -r "SmokeApp" "$target_dir" -l | head -1
+          # And the substitution must have caught the new flag placeholders
+          grep -r "FeatureFlagKey" "$target_dir" -l | head -1
+          # No literal placeholders should remain for the ones we passed
+          ! grep -r "{{APP}}" "$target_dir" --include="*.md" --include="*.mdc"
+          ! grep -r "{{JIRA_BOARD_ID}}" "$target_dir" --include="*.md" --include="*.mdc"
+
+      - name: Verify no real-company fingerprints
+        run: |
+          # Sentinel check — these strings were leaked in the past. If any of them
+          # ever appears again in the repo, fail the build loudly.
+          ! grep -rinE "(AdView|PlaceActions|UserSessionManager|OnDemandInactivity|guide-destination|2c673f7f|6384c3cc|2e95de03|3425de03|RemoteConfigKeyDefaultValueFactory)" --exclude-dir=.git --exclude-dir=.github --exclude-dir=content .
