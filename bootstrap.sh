@@ -534,3 +534,8 @@ case "$IDE" in
     echo "  • All steering ships with \`inclusion: manual\` — attach in chat when needed, or change to \`always\` / \`fileMatch\` per file."
     ;;
 esac
+
+# The `[[ … ]] && echo …` lines above return non-zero when the condition is false.
+# Under `set -e` (e.g. when invoked from CI's `bash -e`), that would surface as a
+# script failure even though everything ran successfully. Make the exit code explicit.
+exit 0
