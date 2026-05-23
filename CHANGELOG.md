@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-05-23
+
+### Added
+
+- **`bootstrap.sh --ide <claude|cursor|kiro>`** — install the same content as Cursor `.mdc` rules or Kiro `.md` steering files. Frontmatter is rewritten per IDE; `{{PLACEHOLDER}}` substitution still applies.
+- **Four new placeholders** wired through `bootstrap.sh` (CLI flag + env var + sed substitution): `{{JIRA_BOARD_ID}}`, `{{FLAG_KEY_ENUM}}`, `{{FLAG_KEY_FILE}}`, `{{FLAG_DEFAULTS_FILE}}`.
+- **`.github/ISSUE_TEMPLATE/`** — bug report + feature request forms (blank issues disabled, Discussions linked).
+- **`.github/PULL_REQUEST_TEMPLATE.md`** — change-type checklist with a placeholder-hygiene gate.
+- **`.github/workflows/bootstrap-smoke-test.yml`** — matrix CI (`claude` × `cursor` × `kiro`) that runs `bootstrap.sh` against each target, verifies expected layout + substitution, and fails the build if any previously-leaked fingerprint reappears.
+
+### Changed
+
+- Generalized agent + command examples that referenced real production class/file names. Replacements use clearly synthetic names (`Profile`, `ProfileViewModel`, `FeatureFlagKey`, etc.) or `<descriptive-tag>` markers.
+
 ## [0.1.0] — 2026-05-19
 
 Initial public release. The repo was previously a personal collection under `skills-claude`; renamed and reorganized for community distribution.
@@ -25,5 +39,6 @@ Initial public release. The repo was previously a personal collection under `ski
 - **`bootstrap.sh` env var** `SKILLS_CLAUDE_REPO` → `IOS_WORKFLOW_CLAUDE_REPO` with backwards-compat alias (`${IOS_WORKFLOW_CLAUDE_REPO:-${SKILLS_CLAUDE_REPO:-$SCRIPT_DIR}}`).
 - **GitHub topics** added: `claude-code`, `claude-plugin`, `claude-code-plugin`, `ios`, `swift`, `xcode`, `swift6`, `jira`, `github-cli`, `automation`, `pr-workflow`, `apollo-ios`, `swiftlint`, `slash-commands`.
 
-[Unreleased]: https://github.com/carloshpdoc/ios-workflow-claude/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/carloshpdoc/ios-workflow-claude/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/carloshpdoc/ios-workflow-claude/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/carloshpdoc/ios-workflow-claude/releases/tag/v0.1.0
