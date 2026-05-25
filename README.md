@@ -1,5 +1,7 @@
 # ios-workflow-claude
 
+**English** · [Português brasileiro](README.pt-br.md)
+
 Reusable Claude Code slash-commands, skills, and workflows extracted from real iOS / backend projects. Drop into any repo's `.claude/` folder, or wire to a global `~/.claude/`.
 
 ![demo](docs/assets/demo.gif)
